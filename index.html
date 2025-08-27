@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Work Order PDAM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .tab-button.active { border-bottom: 3px solid #007BFF; color: #007BFF; }
+        .card { transition: transform 0.2s ease-in-out; }
+        .card:hover { transform: translateY(-5px); }
+        .hidden-content { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+
+    <div id="main-app" class="w-full max-w-2xl bg-white shadow-xl rounded-xl overflow-hidden my-8">
+
+        <!-- Header -->
+        <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold">Aplikasi Work Order</h1>
+            <button id="add-task-btn" class="bg-blue-500 text-white p-2 rounded-full shadow-lg hover:bg-blue-400 transition-colors">
+                <i class="fas fa-plus"></i>
+            </button>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex justify-around bg-white border-b-2 border-gray-200">
+            <button class="tab-button active flex-1 py-3 px-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors" data-tab="assigned">
+                Tugas Saya
+            </button>
+            <button class="tab-button flex-1 py-3 px-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors" data-tab="completed">
+                Selesai
+            </button>
+        </nav>
+
+        <!-- Main Content (Containers for each view) -->
+        <div id="assigned-content" class="p-4 space-y-4">
+            <!-- Assigned tasks will be injected here by JS -->
+        </div>
+
+        <div id="completed-content" class="p-4 space-y-4 hidden-content">
+            <!-- Completed tasks will be injected here by JS -->
+        </div>
+
+        <!-- Task Detail View (Initially hidden) -->
+        <div id="detail-view" class="p-4 space-y-4 hidden-content">
+            <button id="back-btn" class="text-blue-600 hover:underline mb-4"><i class="fas fa-arrow-left mr-2"></i>Kembali</button>
+            <h2 id="detail-title" class="text-2xl font-bold mb-2"></h2>
+            <div id="detail-status" class="px-3 py-1 text-sm font-semibold rounded-full mb-4"></div>
+            <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                <p class="text-gray-600 mb-2">Lokasi:</p>
+                <p id="detail-location" class="font-medium text-gray-800"></p>
+                <p class="text-gray-600 mt-4 mb-2">Masalah:</p>
+                <p id="detail-description" class="font-medium text-gray-800"></p>
+                <div id="image-container" class="mt-4"></div>
+            </div>
+            <button id="complete-task-btn" class="w-full bg-green-600 text-white py-3 rounded-lg shadow-md hover:bg-green-500 transition-colors mt-6">
+                Selesaikan Pekerjaan
+            </button>
+        </div>
+
+        <!-- New Task Form (Initially hidden) -->
+        <div id="new-task-form" class="p-4 space-y-4 hidden-content">
+            <button id="back-from-form-btn" class="text-blue-600 hover:underline mb-4"><i class="fas fa-arrow-left mr-2"></i>Kembali</button>
+            <h2 class="text-2xl font-bold mb-4">Buat Laporan Baru</h2>
+            <form id="task-form" class="space-y-4">
+                <div>
+                    <label for="task-location" class="block text-gray-700 font-semibold mb-1">Lokasi</label>
+                    <input type="text" id="task-location" name="location" placeholder="Masukkan lokasi kejadian..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label for="task-description" class="block text-gray-700 font-semibold mb-1">Deskripsi Masalah</label>
+                    <textarea id="task-description" name="description" placeholder="Jelaskan masalahnya secara detail..." rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg shadow-md hover:bg-blue-500 transition-colors">
+                    Laporkan Masalah
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const assignedContent = document.getElementById('assigned-content');
+            const completedContent = document.getElementById('completed-content');
+            const detailView = document.getElementById('detail-view');
+            const newForm = document.getElementById('new-task-form');
+            const tabs = document.querySelectorAll('.tab-button');
+            const backBtn = document.getElementById('back-btn');
+            const backFromFormBtn = document.getElementById('back-from-form-btn');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const completeTaskBtn = document.getElementById('complete-task-btn');
+            const taskForm = document.getElementById('task-form');
+
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [{
+                id: 1,
+                title: 'Kebocoran Pipa di Jl. Raya Caruban',
+                location: 'Jl. Raya Caruban, dekat kantor pos.',
+                description: 'Terdapat kebocoran besar di pipa distribusi 4 inci. Perlu perbaikan segera untuk menghindari pemborosan air.',
+                status: 'assigned',
+                image: 'https://placehold.co/400x250/F8D7DA/721C24?text=Foto+Kebocoran'
+            }, {
+                id: 2,
+                title: 'Pompa Sumur 3 Mati',
+                location: 'Sumur Pompa No. 3, Desa Rejoagung.',
+                description: 'Sistem IoT mendeteksi pompa utama di Sumur 3 mati. Aliran air terhenti. Perlu inspeksi pada panel listrik.',
+                status: 'assigned',
+                image: 'https://placehold.co/400x250/C8E6C9/2C5339?text=Laporan+IoT'
+            }, {
+                id: 3,
+                title: 'Pergantian Meter Pelanggan',
+                location: 'Rumah Bpk. Anto, Jl. Melati No. 5.',
+                description: 'Meteran macet dan tidak berputar. Pelanggan melaporkan tagihan tidak sesuai dengan pemakaian. Perlu penggantian meter baru.',
+                status: 'completed',
+                image: 'https://placehold.co/400x250/D1ECF1/0C5460?text=Foto+Meteran+Rusak'
+            }];
+
+            let activeTaskId = null;
+
+            // Save tasks to localStorage
+            const saveTasks = () => {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            };
+
+            // Render tasks
+            const renderTasks = () => {
+                assignedContent.innerHTML = '';
+                completedContent.innerHTML = '';
+
+                tasks.forEach(task => {
+                    const card = document.createElement('div');
+                    card.classList.add('card', 'bg-white', 'p-4', 'rounded-lg', 'shadow-md', 'cursor-pointer');
+                    card.dataset.id = task.id;
+
+                    let statusColor = '';
+                    if (task.status === 'assigned') {
+                        statusColor = 'bg-red-100 text-red-600';
+                    } else if (task.status === 'completed') {
+                        statusColor = 'bg-green-100 text-green-600';
+                    }
+
+                    card.innerHTML = `
+                        <h3 class="text-lg font-bold text-gray-800">${task.title}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${task.location}</p>
+                        <div class="mt-3">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColor}">${task.status === 'assigned' ? 'Ditugaskan' : 'Selesai'}</span>
+                        </div>
+                    `;
+
+                    if (task.status === 'assigned') {
+                        assignedContent.appendChild(card);
+                    } else {
+                        completedContent.appendChild(card);
+                    }
+                });
+
+                // Add click listeners to cards
+                document.querySelectorAll('.card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const taskId = e.currentTarget.dataset.id;
+                        showTaskDetail(taskId);
+                    });
+                });
+            };
+
+            // Show task detail view
+            const showTaskDetail = (taskId) => {
+                const task = tasks.find(t => t.id == taskId);
+                if (!task) return;
+
+                activeTaskId = taskId;
+
+                document.getElementById('detail-title').textContent = task.title;
+                document.getElementById('detail-location').textContent = task.location;
+                document.getElementById('detail-description').textContent = task.description;
+
+                const detailStatus = document.getElementById('detail-status');
+                detailStatus.textContent = task.status === 'assigned' ? 'Ditugaskan' : 'Selesai';
+                detailStatus.className = `px-3 py-1 text-sm font-semibold rounded-full ${task.status === 'assigned' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`;
+
+                const imageContainer = document.getElementById('image-container');
+                imageContainer.innerHTML = `<img src="${task.image}" alt="Foto Laporan" class="w-full h-auto rounded-lg shadow-md object-cover">`;
+
+                if (task.status === 'completed') {
+                    completeTaskBtn.classList.add('hidden');
+                } else {
+                    completeTaskBtn.classList.remove('hidden');
+                }
+
+                document.getElementById('assigned-content').classList.add('hidden-content');
+                document.getElementById('completed-content').classList.add('hidden-content');
+                document.getElementById('new-task-form').classList.add('hidden-content');
+                document.getElementById('detail-view').classList.remove('hidden-content');
+            };
+
+            // Switch tabs
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const targetTab = tab.dataset.tab;
+
+                    document.getElementById('assigned-content').classList.add('hidden-content');
+                    document.getElementById('completed-content').classList.add('hidden-content');
+
+                    if (targetTab === 'assigned') {
+                        document.getElementById('assigned-content').classList.remove('hidden-content');
+                    } else {
+                        document.getElementById('completed-content').classList.remove('hidden-content');
+                    }
+                });
+            });
+
+            // Back button functionality
+            backBtn.addEventListener('click', () => {
+                document.getElementById('detail-view').classList.add('hidden-content');
+                const activeTab = document.querySelector('.tab-button.active');
+                if (activeTab.dataset.tab === 'assigned') {
+                    document.getElementById('assigned-content').classList.remove('hidden-content');
+                } else {
+                    document.getElementById('completed-content').classList.remove('hidden-content');
+                }
+            });
+
+            // Add new task button
+            addTaskBtn.addEventListener('click', () => {
+                document.getElementById('assigned-content').classList.add('hidden-content');
+                document.getElementById('completed-content').classList.add('hidden-content');
+                document.getElementById('detail-view').classList.add('hidden-content');
+                document.getElementById('new-task-form').classList.remove('hidden-content');
+            });
+
+            // Back from new task form
+            backFromFormBtn.addEventListener('click', () => {
+                document.getElementById('new-task-form').classList.add('hidden-content');
+                const activeTab = document.querySelector('.tab-button.active');
+                if (activeTab.dataset.tab === 'assigned') {
+                    document.getElementById('assigned-content').classList.remove('hidden-content');
+                } else {
+                    document.getElementById('completed-content').classList.remove('hidden-content');
+                }
+            });
+
+            // Complete task button
+            completeTaskBtn.addEventListener('click', () => {
+                const taskIndex = tasks.findIndex(t => t.id == activeTaskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex].status = 'completed';
+                    saveTasks();
+                    renderTasks();
+                    alert('Pekerjaan telah diselesaikan.');
+                    document.getElementById('detail-view').classList.add('hidden-content');
+                    document.querySelector('.tab-button[data-tab="completed"]').click();
+                }
+            });
+
+            // New task form submission
+            taskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const newTask = {
+                    id: tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1,
+                    title: 'Laporan Baru',
+                    location: formData.get('location'),
+                    description: formData.get('description'),
+                    status: 'assigned',
+                    image: `https://placehold.co/400x250/D3D3D3/000000?text=Laporan+Baru`
+                };
+                tasks.push(newTask);
+                saveTasks();
+                renderTasks();
+                alert('Laporan berhasil dibuat!');
+                e.target.reset();
+                document.getElementById('new-task-form').classList.add('hidden-content');
+                document.querySelector('.tab-button[data-tab="assigned"]').click();
+            });
+
+            renderTasks();
+        });
+    </script>
+</body>
+</html>
