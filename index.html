@@ -12,90 +12,213 @@
         .card { transition: transform 0.2s ease-in-out; }
         .card:hover { transform: translateY(-5px); }
         .hidden-content { display: none; }
+        .modal { display: none; }
+        .rating-star { cursor: pointer; transition: color 0.2s; }
+        .rating-star.active { color: #facc15; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
 
-    <div id="main-app" class="w-full max-w-2xl bg-white shadow-xl rounded-xl overflow-hidden my-8">
+    <div id="app-container" class="w-full max-w-2xl bg-white shadow-xl rounded-xl overflow-hidden my-8">
 
-        <!-- Header -->
-        <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold">Aplikasi Work Order</h1>
-            <button id="add-task-btn" class="bg-blue-500 text-white p-2 rounded-full shadow-lg hover:bg-blue-400 transition-colors">
-                <i class="fas fa-plus"></i>
-            </button>
-        </header>
-
-        <!-- Navigation Tabs -->
-        <nav class="flex justify-around bg-white border-b-2 border-gray-200">
-            <button class="tab-button active flex-1 py-3 px-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors" data-tab="assigned">
-                Tugas Saya
-            </button>
-            <button class="tab-button flex-1 py-3 px-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors" data-tab="completed">
-                Selesai
-            </button>
-        </nav>
-
-        <!-- Main Content (Containers for each view) -->
-        <div id="assigned-content" class="p-4 space-y-4">
-            <!-- Assigned tasks will be injected here by JS -->
-        </div>
-
-        <div id="completed-content" class="p-4 space-y-4 hidden-content">
-            <!-- Completed tasks will be injected here by JS -->
-        </div>
-
-        <!-- Task Detail View (Initially hidden) -->
-        <div id="detail-view" class="p-4 space-y-4 hidden-content">
-            <button id="back-btn" class="text-blue-600 hover:underline mb-4"><i class="fas fa-arrow-left mr-2"></i>Kembali</button>
-            <h2 id="detail-title" class="text-2xl font-bold mb-2"></h2>
-            <div id="detail-status" class="px-3 py-1 text-sm font-semibold rounded-full mb-4"></div>
-            <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
-                <p class="text-gray-600 mb-2">Lokasi:</p>
-                <p id="detail-location" class="font-medium text-gray-800"></p>
-                <p class="text-gray-600 mt-4 mb-2">Masalah:</p>
-                <p id="detail-description" class="font-medium text-gray-800"></p>
-                <div id="image-container" class="mt-4"></div>
-            </div>
-            <button id="complete-task-btn" class="w-full bg-green-600 text-white py-3 rounded-lg shadow-md hover:bg-green-500 transition-colors mt-6">
-                Selesaikan Pekerjaan
-            </button>
-        </div>
-
-        <!-- New Task Form (Initially hidden) -->
-        <div id="new-task-form" class="p-4 space-y-4 hidden-content">
-            <button id="back-from-form-btn" class="text-blue-600 hover:underline mb-4"><i class="fas fa-arrow-left mr-2"></i>Kembali</button>
-            <h2 class="text-2xl font-bold mb-4">Buat Laporan Baru</h2>
-            <form id="task-form" class="space-y-4">
-                <div>
-                    <label for="task-location" class="block text-gray-700 font-semibold mb-1">Lokasi</label>
-                    <input type="text" id="task-location" name="location" placeholder="Masukkan lokasi kejadian..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div>
-                    <label for="task-description" class="block text-gray-700 font-semibold mb-1">Deskripsi Masalah</label>
-                    <textarea id="task-description" name="description" placeholder="Jelaskan masalahnya secara detail..." rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg shadow-md hover:bg-blue-500 transition-colors">
-                    Laporkan Masalah
+        <!-- User Role Selection View -->
+        <div id="user-select-view" class="p-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Selamat Datang</h1>
+            <p class="text-gray-600 mb-8">Pilih peran Anda untuk melanjutkan.</p>
+            <div class="space-y-4">
+                <button id="select-customer" class="w-full bg-blue-600 text-white py-4 rounded-lg shadow-md hover:bg-blue-500 transition-colors text-lg font-semibold">
+                    Pelanggan
                 </button>
-            </form>
+                <button id="select-technician" class="w-full bg-blue-600 text-white py-4 rounded-lg shadow-md hover:bg-blue-500 transition-colors text-lg font-semibold">
+                    Pelaksana Teknis
+                </button>
+                <button id="select-admin" class="w-full bg-blue-600 text-white py-4 rounded-lg shadow-md hover:bg-blue-500 transition-colors text-lg font-semibold">
+                    Admin
+                </button>
+            </div>
+        </div>
+
+        <!-- Customer Dashboard -->
+        <div id="customer-view" class="hidden-content">
+            <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+                <h1 class="text-xl font-bold">Dashboard Pelanggan</h1>
+                <button id="customer-back-btn" class="text-white hover:underline"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+            </header>
+
+            <nav class="flex justify-around bg-white border-b-2 border-gray-200">
+                <button class="tab-button active flex-1 py-3 px-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors" data-tab="customer-create">
+                    Buat Laporan
+                </button>
+                <button class="tab-button flex-1 py-3 px-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors" data-tab="customer-my-tasks">
+                    Laporan Saya
+                </button>
+            </nav>
+
+            <div id="customer-create-content" class="p-4 space-y-4">
+                <h2 class="text-2xl font-bold mb-4">Buat Laporan Baru</h2>
+                <form id="customer-report-form" class="space-y-4">
+                    <div>
+                        <label for="customer-location" class="block text-gray-700 font-semibold mb-1">Lokasi</label>
+                        <input type="text" id="customer-location" name="location" placeholder="Masukkan lokasi kejadian..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="customer-description" class="block text-gray-700 font-semibold mb-1">Deskripsi Masalah</label>
+                        <textarea id="customer-description" name="description" placeholder="Jelaskan masalahnya secara detail..." rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg shadow-md hover:bg-blue-500 transition-colors">
+                        Laporkan Masalah
+                    </button>
+                </form>
+            </div>
+
+            <div id="customer-my-tasks-content" class="p-4 space-y-4 hidden-content">
+                <!-- My tasks will be injected here by JS -->
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-view" class="hidden-content">
+            <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+                <h1 class="text-xl font-bold">Dashboard Admin</h1>
+                <button id="admin-back-btn" class="text-white hover:underline"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+            </header>
+            <div id="admin-pending-tasks" class="p-4 space-y-4">
+                <!-- Pending tasks for admin will be injected here by JS -->
+            </div>
+            <div id="admin-detail-view" class="p-4 space-y-4 hidden-content">
+                <button id="admin-back-list-btn" class="text-blue-600 hover:underline mb-4"><i class="fas fa-arrow-left mr-2"></i>Kembali</button>
+                <h2 id="admin-detail-title" class="text-2xl font-bold mb-2"></h2>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <p class="text-gray-600 mb-2">Lokasi:</p>
+                    <p id="admin-detail-location" class="font-medium text-gray-800"></p>
+                    <p class="text-gray-600 mt-4 mb-2">Deskripsi:</p>
+                    <p id="admin-detail-description" class="font-medium text-gray-800"></p>
+                </div>
+                <button id="admin-approve-btn" class="w-full bg-green-600 text-white py-3 rounded-lg shadow-md hover:bg-green-500 transition-colors mt-6">
+                    Setujui & Tugaskan
+                </button>
+                <button id="admin-reject-btn" class="w-full bg-red-600 text-white py-3 rounded-lg shadow-md hover:bg-red-500 transition-colors mt-3">
+                    Tolak Laporan
+                </button>
+            </div>
+        </div>
+
+        <!-- Technician Dashboard -->
+        <div id="technician-view" class="hidden-content">
+            <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+                <h1 class="text-xl font-bold">Dashboard Pelaksana Teknis</h1>
+                <button id="technician-back-btn" class="text-white hover:underline"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+            </header>
+
+            <nav class="flex justify-around bg-white border-b-2 border-gray-200">
+                <button class="tab-button active flex-1 py-3 px-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors" data-tab="assigned">
+                    Tugas Saya
+                </button>
+                <button class="tab-button flex-1 py-3 px-4 text-center font-semibold text-gray-600 hover:bg-gray-50 transition-colors" data-tab="completed">
+                    Selesai
+                </button>
+            </nav>
+
+            <div id="assigned-content" class="p-4 space-y-4">
+                <!-- Assigned tasks will be injected here by JS -->
+            </div>
+
+            <div id="completed-content" class="p-4 space-y-4 hidden-content">
+                <!-- Completed tasks will be injected here by JS -->
+            </div>
+
+            <div id="technician-detail-view" class="p-4 space-y-4 hidden-content">
+                <button id="technician-back-list-btn" class="text-blue-600 hover:underline mb-4"><i class="fas fa-arrow-left mr-2"></i>Kembali</button>
+                <h2 id="technician-detail-title" class="text-2xl font-bold mb-2"></h2>
+                <div id="technician-detail-status" class="px-3 py-1 text-sm font-semibold rounded-full mb-4"></div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <p class="text-gray-600 mb-2">Lokasi:</p>
+                    <p id="technician-detail-location" class="font-medium text-gray-800"></p>
+                    <p class="text-gray-600 mt-4 mb-2">Masalah:</p>
+                    <p id="technician-detail-description" class="font-medium text-gray-800"></p>
+                    <div id="image-container" class="mt-4"></div>
+                </div>
+                <button id="complete-task-btn" class="w-full bg-green-600 text-white py-3 rounded-lg shadow-md hover:bg-green-500 transition-colors mt-6">
+                    Selesaikan Pekerjaan
+                </button>
+            </div>
         </div>
 
     </div>
 
+    <!-- Custom Alert Modal -->
+    <div id="custom-alert" class="modal fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-80 text-center">
+            <p id="alert-message" class="text-lg font-semibold mb-4"></p>
+            <button id="alert-close-btn" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-500 transition-colors">OK</button>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div id="rating-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h2 class="text-xl font-bold mb-4 text-center">Berikan Rating & Feedback</h2>
+            <div class="flex justify-center mb-4 text-2xl text-gray-400">
+                <i class="fas fa-star rating-star" data-rating="1"></i>
+                <i class="fas fa-star rating-star" data-rating="2"></i>
+                <i class="fas fa-star rating-star" data-rating="3"></i>
+                <i class="fas fa-star rating-star" data-rating="4"></i>
+                <i class="fas fa-star rating-star" data-rating="5"></i>
+            </div>
+            <div>
+                <label for="feedback-text" class="block text-gray-700 font-semibold mb-1">Feedback</label>
+                <textarea id="feedback-text" placeholder="Berikan feedback Anda..." rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="flex justify-end mt-4 space-x-2">
+                <button id="rating-submit-btn" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-500 transition-colors">Kirim</button>
+                <button id="rating-cancel-btn" class="bg-gray-300 text-gray-800 py-2 px-6 rounded-lg hover:bg-gray-400 transition-colors">Batal</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- UI Elements ---
+            const userSelectView = document.getElementById('user-select-view');
+            const customerView = document.getElementById('customer-view');
+            const adminView = document.getElementById('admin-view');
+            const technicianView = document.getElementById('technician-view');
+
+            const selectCustomerBtn = document.getElementById('select-customer');
+            const selectTechnicianBtn = document.getElementById('select-technician');
+            const selectAdminBtn = document.getElementById('select-admin');
+            const customerBackBtn = document.getElementById('customer-back-btn');
+            const adminBackBtn = document.getElementById('admin-back-btn');
+            const technicianBackBtn = document.getElementById('technician-back-btn');
+
+            const customerCreateContent = document.getElementById('customer-create-content');
+            const customerMyTasksContent = document.getElementById('customer-my-tasks-content');
+            const adminPendingTasksContent = document.getElementById('admin-pending-tasks');
+            const adminDetailView = document.getElementById('admin-detail-view');
+            const technicianDetailView = document.getElementById('technician-detail-view');
             const assignedContent = document.getElementById('assigned-content');
             const completedContent = document.getElementById('completed-content');
-            const detailView = document.getElementById('detail-view');
-            const newForm = document.getElementById('new-task-form');
-            const tabs = document.querySelectorAll('.tab-button');
-            const backBtn = document.getElementById('back-btn');
-            const backFromFormBtn = document.getElementById('back-from-form-btn');
-            const addTaskBtn = document.getElementById('add-task-btn');
-            const completeTaskBtn = document.getElementById('complete-task-btn');
-            const taskForm = document.getElementById('task-form');
 
+            const customerTabs = customerView.querySelectorAll('.tab-button');
+            const technicianTabs = technicianView.querySelectorAll('.tab-button');
+            const customerReportForm = document.getElementById('customer-report-form');
+            const adminApproveBtn = document.getElementById('admin-approve-btn');
+            const adminRejectBtn = document.getElementById('admin-reject-btn');
+            const technicianCompleteBtn = document.getElementById('complete-task-btn');
+            const adminBackListBtn = document.getElementById('admin-back-list-btn');
+            const technicianBackListBtn = document.getElementById('technician-back-list-btn');
+
+            // --- Modal Elements ---
+            const customAlert = document.getElementById('custom-alert');
+            const alertMessage = document.getElementById('alert-message');
+            const alertCloseBtn = document.getElementById('alert-close-btn');
+            const ratingModal = document.getElementById('rating-modal');
+            const ratingStars = document.querySelectorAll('.rating-star');
+            const feedbackText = document.getElementById('feedback-text');
+            const ratingSubmitBtn = document.getElementById('rating-submit-btn');
+            const ratingCancelBtn = document.getElementById('rating-cancel-btn');
+
+            // --- State Variables ---
             let tasks = JSON.parse(localStorage.getItem('tasks')) || [{
                 id: 1,
                 title: 'Kebocoran Pipa di Jl. Raya Caruban',
@@ -116,18 +239,144 @@
                 location: 'Rumah Bpk. Anto, Jl. Melati No. 5.',
                 description: 'Meteran macet dan tidak berputar. Pelanggan melaporkan tagihan tidak sesuai dengan pemakaian. Perlu penggantian meter baru.',
                 status: 'completed',
-                image: 'https://placehold.co/400x250/D1ECF1/0C5460?text=Foto+Meteran+Rusak'
+                image: 'https://placehold.co/400x250/D1ECF1/0C5460?text=Foto+Meteran+Rusak',
+                rating: 5,
+                feedback: 'Sangat cepat dan profesional!'
+            }, {
+                id: 4,
+                title: 'Keluhan Air Keruh',
+                location: 'Kompleks Perumahan Cempaka Asri Blok B',
+                description: 'Air di keran seringkali terlihat keruh, terutama pagi hari. Mohon dicek.',
+                status: 'pending',
+                image: 'https://placehold.co/400x250/E9A88F/6C402E?text=Air+Keruh',
+                submitterId: 'customer_1'
             }];
 
             let activeTaskId = null;
+            let currentUserId = 'customer_1'; // Simple user ID for mockup purposes
 
-            // Save tasks to localStorage
+            // --- Core Functions ---
+            const showView = (viewId) => {
+                userSelectView.classList.add('hidden-content');
+                customerView.classList.add('hidden-content');
+                adminView.classList.add('hidden-content');
+                technicianView.classList.add('hidden-content');
+                document.getElementById(viewId).classList.remove('hidden-content');
+            };
+
             const saveTasks = () => {
                 localStorage.setItem('tasks', JSON.stringify(tasks));
             };
 
-            // Render tasks
-            const renderTasks = () => {
+            const showAlert = (message) => {
+                alertMessage.textContent = message;
+                customAlert.style.display = 'flex';
+            };
+
+            const showRatingModal = () => {
+                ratingModal.style.display = 'flex';
+                ratingStars.forEach(star => {
+                    star.classList.remove('active');
+                });
+                feedbackText.value = '';
+            };
+
+            // --- Render Functions ---
+            const renderCustomerTasks = () => {
+                customerMyTasksContent.innerHTML = '';
+                const myTasks = tasks.filter(t => t.submitterId === currentUserId);
+                if (myTasks.length === 0) {
+                    customerMyTasksContent.innerHTML = '<p class="text-center text-gray-500">Anda belum memiliki laporan.</p>';
+                    return;
+                }
+                myTasks.forEach(task => {
+                    const card = document.createElement('div');
+                    card.classList.add('card', 'bg-white', 'p-4', 'rounded-lg', 'shadow-md');
+                    card.dataset.id = task.id;
+
+                    let statusColor = '';
+                    if (task.status === 'pending') statusColor = 'bg-yellow-100 text-yellow-600';
+                    if (task.status === 'assigned') statusColor = 'bg-blue-100 text-blue-600';
+                    if (task.status === 'completed') statusColor = 'bg-green-100 text-green-600';
+                    if (task.status === 'rejected') statusColor = 'bg-gray-100 text-gray-600';
+
+                    let statusText = '';
+                    if (task.status === 'pending') statusText = 'Menunggu Verifikasi Admin';
+                    if (task.status === 'assigned') statusText = 'Sedang Ditangani';
+                    if (task.status === 'completed') statusText = 'Selesai';
+                    if (task.status === 'rejected') statusText = 'Ditolak';
+
+                    card.innerHTML = `
+                        <h3 class="text-lg font-bold text-gray-800">${task.title}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${task.location}</p>
+                        <div class="mt-3">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColor}">${statusText}</span>
+                        </div>
+                    `;
+                    
+                    if (task.status === 'completed' && !task.rating) {
+                        const rateBtn = document.createElement('button');
+                        rateBtn.classList.add('w-full', 'bg-yellow-500', 'text-white', 'py-2', 'rounded-lg', 'shadow-md', 'hover:bg-yellow-400', 'transition-colors', 'mt-4');
+                        rateBtn.textContent = 'Beri Rating & Feedback';
+                        rateBtn.addEventListener('click', () => {
+                            activeTaskId = task.id;
+                            showRatingModal();
+                        });
+                        card.appendChild(rateBtn);
+                    } else if (task.status === 'completed' && task.rating) {
+                        const ratingDisplay = document.createElement('div');
+                        ratingDisplay.classList.add('mt-4');
+                        ratingDisplay.innerHTML = `
+                            <p class="text-sm font-semibold">Rating Anda:</p>
+                            <div class="flex items-center text-yellow-500 text-xl">
+                                ${'<i class="fas fa-star"></i>'.repeat(task.rating)}
+                                ${'<i class="far fa-star"></i>'.repeat(5 - task.rating)}
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2">${task.feedback}</p>
+                        `;
+                        card.appendChild(ratingDisplay);
+                    }
+                    customerMyTasksContent.appendChild(card);
+                });
+            };
+
+            const renderAdminTasks = () => {
+                adminPendingTasksContent.innerHTML = '';
+                const pendingTasks = tasks.filter(t => t.status === 'pending');
+                if (pendingTasks.length === 0) {
+                    adminPendingTasksContent.innerHTML = '<p class="text-center text-gray-500">Tidak ada laporan yang menunggu verifikasi.</p>';
+                    return;
+                }
+                pendingTasks.forEach(task => {
+                    const card = document.createElement('div');
+                    card.classList.add('card', 'bg-white', 'p-4', 'rounded-lg', 'shadow-md', 'cursor-pointer');
+                    card.dataset.id = task.id;
+                    card.innerHTML = `
+                        <h3 class="text-lg font-bold text-gray-800">${task.title}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${task.location}</p>
+                        <div class="mt-3">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600">Menunggu Verifikasi</span>
+                        </div>
+                    `;
+                    card.addEventListener('click', () => showAdminDetail(task.id));
+                    adminPendingTasksContent.appendChild(card);
+                });
+            };
+            
+            const showAdminDetail = (taskId) => {
+                const task = tasks.find(t => t.id == taskId);
+                if (!task) return;
+                activeTaskId = taskId;
+                
+                document.getElementById('admin-detail-title').textContent = task.title;
+                document.getElementById('admin-detail-location').textContent = task.location;
+                document.getElementById('admin-detail-description').textContent = task.description;
+                
+                adminPendingTasksContent.classList.add('hidden-content');
+                adminDetailView.classList.remove('hidden-content');
+            };
+
+            const renderTechnicianTasks = () => {
                 assignedContent.innerHTML = '';
                 completedContent.innerHTML = '';
 
@@ -153,32 +402,30 @@
 
                     if (task.status === 'assigned') {
                         assignedContent.appendChild(card);
-                    } else {
+                    } else if (task.status === 'completed') {
                         completedContent.appendChild(card);
                     }
                 });
 
-                // Add click listeners to cards
-                document.querySelectorAll('.card').forEach(card => {
+                document.querySelectorAll('#assigned-content .card, #completed-content .card').forEach(card => {
                     card.addEventListener('click', (e) => {
                         const taskId = e.currentTarget.dataset.id;
-                        showTaskDetail(taskId);
+                        showTechnicianDetail(taskId);
                     });
                 });
             };
 
-            // Show task detail view
-            const showTaskDetail = (taskId) => {
+            const showTechnicianDetail = (taskId) => {
                 const task = tasks.find(t => t.id == taskId);
                 if (!task) return;
 
                 activeTaskId = taskId;
 
-                document.getElementById('detail-title').textContent = task.title;
-                document.getElementById('detail-location').textContent = task.location;
-                document.getElementById('detail-description').textContent = task.description;
+                document.getElementById('technician-detail-title').textContent = task.title;
+                document.getElementById('technician-detail-location').textContent = task.location;
+                document.getElementById('technician-detail-description').textContent = task.description;
 
-                const detailStatus = document.getElementById('detail-status');
+                const detailStatus = document.getElementById('technician-detail-status');
                 detailStatus.textContent = task.status === 'assigned' ? 'Ditugaskan' : 'Selesai';
                 detailStatus.className = `px-3 py-1 text-sm font-semibold rounded-full ${task.status === 'assigned' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`;
 
@@ -186,80 +433,61 @@
                 imageContainer.innerHTML = `<img src="${task.image}" alt="Foto Laporan" class="w-full h-auto rounded-lg shadow-md object-cover">`;
 
                 if (task.status === 'completed') {
-                    completeTaskBtn.classList.add('hidden');
+                    technicianCompleteBtn.classList.add('hidden');
                 } else {
-                    completeTaskBtn.classList.remove('hidden');
+                    technicianCompleteBtn.classList.remove('hidden');
                 }
 
-                document.getElementById('assigned-content').classList.add('hidden-content');
-                document.getElementById('completed-content').classList.add('hidden-content');
-                document.getElementById('new-task-form').classList.add('hidden-content');
-                document.getElementById('detail-view').classList.remove('hidden-content');
+                assignedContent.classList.add('hidden-content');
+                completedContent.classList.add('hidden-content');
+                technicianDetailView.classList.remove('hidden-content');
             };
 
-            // Switch tabs
-            tabs.forEach(tab => {
+            // --- Event Listeners ---
+            selectCustomerBtn.addEventListener('click', () => showView('customer-view'));
+            selectTechnicianBtn.addEventListener('click', () => { showView('technician-view'); renderTechnicianTasks(); });
+            selectAdminBtn.addEventListener('click', () => { showView('admin-view'); renderAdminTasks(); });
+
+            customerBackBtn.addEventListener('click', () => showView('user-select-view'));
+            adminBackBtn.addEventListener('click', () => showView('user-select-view'));
+            technicianBackBtn.addEventListener('click', () => showView('user-select-view'));
+
+            customerTabs.forEach(tab => {
                 tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
+                    customerTabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
                     const targetTab = tab.dataset.tab;
 
-                    document.getElementById('assigned-content').classList.add('hidden-content');
-                    document.getElementById('completed-content').classList.add('hidden-content');
+                    customerCreateContent.classList.add('hidden-content');
+                    customerMyTasksContent.classList.add('hidden-content');
 
-                    if (targetTab === 'assigned') {
-                        document.getElementById('assigned-content').classList.remove('hidden-content');
+                    if (targetTab === 'customer-create') {
+                        customerCreateContent.classList.remove('hidden-content');
                     } else {
-                        document.getElementById('completed-content').classList.remove('hidden-content');
+                        customerMyTasksContent.classList.remove('hidden-content');
+                        renderCustomerTasks();
                     }
                 });
             });
 
-            // Back button functionality
-            backBtn.addEventListener('click', () => {
-                document.getElementById('detail-view').classList.add('hidden-content');
-                const activeTab = document.querySelector('.tab-button.active');
-                if (activeTab.dataset.tab === 'assigned') {
-                    document.getElementById('assigned-content').classList.remove('hidden-content');
-                } else {
-                    document.getElementById('completed-content').classList.remove('hidden-content');
-                }
+            technicianTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    technicianTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const targetTab = tab.dataset.tab;
+
+                    assignedContent.classList.add('hidden-content');
+                    completedContent.classList.add('hidden-content');
+
+                    if (targetTab === 'assigned') {
+                        assignedContent.classList.remove('hidden-content');
+                    } else {
+                        completedContent.classList.remove('hidden-content');
+                    }
+                });
             });
 
-            // Add new task button
-            addTaskBtn.addEventListener('click', () => {
-                document.getElementById('assigned-content').classList.add('hidden-content');
-                document.getElementById('completed-content').classList.add('hidden-content');
-                document.getElementById('detail-view').classList.add('hidden-content');
-                document.getElementById('new-task-form').classList.remove('hidden-content');
-            });
-
-            // Back from new task form
-            backFromFormBtn.addEventListener('click', () => {
-                document.getElementById('new-task-form').classList.add('hidden-content');
-                const activeTab = document.querySelector('.tab-button.active');
-                if (activeTab.dataset.tab === 'assigned') {
-                    document.getElementById('assigned-content').classList.remove('hidden-content');
-                } else {
-                    document.getElementById('completed-content').classList.remove('hidden-content');
-                }
-            });
-
-            // Complete task button
-            completeTaskBtn.addEventListener('click', () => {
-                const taskIndex = tasks.findIndex(t => t.id == activeTaskId);
-                if (taskIndex !== -1) {
-                    tasks[taskIndex].status = 'completed';
-                    saveTasks();
-                    renderTasks();
-                    alert('Pekerjaan telah diselesaikan.');
-                    document.getElementById('detail-view').classList.add('hidden-content');
-                    document.querySelector('.tab-button[data-tab="completed"]').click();
-                }
-            });
-
-            // New task form submission
-            taskForm.addEventListener('submit', (e) => {
+            customerReportForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const newTask = {
@@ -267,19 +495,110 @@
                     title: 'Laporan Baru',
                     location: formData.get('location'),
                     description: formData.get('description'),
-                    status: 'assigned',
-                    image: `https://placehold.co/400x250/D3D3D3/000000?text=Laporan+Baru`
+                    status: 'pending',
+                    image: `https://placehold.co/400x250/D3D3D3/000000?text=Laporan+Baru`,
+                    submitterId: currentUserId
                 };
                 tasks.push(newTask);
                 saveTasks();
-                renderTasks();
-                alert('Laporan berhasil dibuat!');
+                showAlert('Laporan berhasil dibuat! Menunggu verifikasi admin.');
                 e.target.reset();
-                document.getElementById('new-task-form').classList.add('hidden-content');
-                document.querySelector('.tab-button[data-tab="assigned"]').click();
+                document.querySelector('[data-tab="customer-my-tasks"]').click();
             });
 
-            renderTasks();
+            // Admin back button
+            adminBackListBtn.addEventListener('click', () => {
+                adminDetailView.classList.add('hidden-content');
+                adminPendingTasksContent.classList.remove('hidden-content');
+                renderAdminTasks();
+            });
+
+            adminApproveBtn.addEventListener('click', () => {
+                const taskIndex = tasks.findIndex(t => t.id == activeTaskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex].status = 'assigned';
+                    saveTasks();
+                    showAlert('Laporan telah disetujui dan ditugaskan.');
+                    adminDetailView.classList.add('hidden-content');
+                    adminPendingTasksContent.classList.remove('hidden-content');
+                    renderAdminTasks();
+                }
+            });
+
+            adminRejectBtn.addEventListener('click', () => {
+                const taskIndex = tasks.findIndex(t => t.id == activeTaskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex].status = 'rejected';
+                    saveTasks();
+                    showAlert('Laporan telah ditolak.');
+                    adminDetailView.classList.add('hidden-content');
+                    adminPendingTasksContent.classList.remove('hidden-content');
+                    renderAdminTasks();
+                }
+            });
+
+            // Technician back button
+            technicianBackListBtn.addEventListener('click', () => {
+                technicianDetailView.classList.add('hidden-content');
+                const activeTab = document.querySelector('#technician-view .tab-button.active');
+                if (activeTab.dataset.tab === 'assigned') {
+                    assignedContent.classList.remove('hidden-content');
+                } else {
+                    completedContent.classList.remove('hidden-content');
+                }
+            });
+
+            technicianCompleteBtn.addEventListener('click', () => {
+                const taskIndex = tasks.findIndex(t => t.id == activeTaskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex].status = 'completed';
+                    saveTasks();
+                    showAlert('Pekerjaan telah diselesaikan.');
+                    technicianDetailView.classList.add('hidden-content');
+                    assignedContent.classList.remove('hidden-content');
+                    renderTechnicianTasks();
+                    document.querySelector('.tab-button[data-tab="completed"]').click();
+                }
+            });
+
+            // --- Custom Alert & Rating Modal Logic ---
+            alertCloseBtn.addEventListener('click', () => {
+                customAlert.style.display = 'none';
+            });
+
+            ratingStars.forEach(star => {
+                star.addEventListener('click', (e) => {
+                    const rating = parseInt(e.currentTarget.dataset.rating);
+                    ratingStars.forEach(s => {
+                        if (s.dataset.rating <= rating) {
+                            s.classList.add('active');
+                        } else {
+                            s.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            ratingSubmitBtn.addEventListener('click', () => {
+                const selectedRating = document.querySelectorAll('.rating-star.active').length;
+                const feedback = feedbackText.value;
+                const taskIndex = tasks.findIndex(t => t.id == activeTaskId);
+
+                if (taskIndex !== -1 && selectedRating > 0) {
+                    tasks[taskIndex].rating = selectedRating;
+                    tasks[taskIndex].feedback = feedback;
+                    saveTasks();
+                    showAlert('Rating dan feedback Anda telah disimpan. Terima kasih!');
+                    ratingModal.style.display = 'none';
+                    renderCustomerTasks();
+                } else {
+                    showAlert('Harap berikan rating sebelum mengirim.');
+                }
+            });
+
+            ratingCancelBtn.addEventListener('click', () => {
+                ratingModal.style.display = 'none';
+            });
         });
     </script>
 </body>
